@@ -70,7 +70,7 @@ ZSH_THEME="spaceship"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git textmate ruby lighthouse docker )
+plugins=(git textmate ruby lighthouse docker zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -156,7 +156,7 @@ SPACESHIP_EXEC_TIME_ELAPSED=1
 SPACESHIP_DIR_SHOW=true
 SPACESHIP_DIR_PREFIX="in "
 SPACESHIP_DIR_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
-SPACESHIP_DIR_TRUNC=2
+SPACESHIP_DIR_TRUNC=3s
 SPACESHIP_DIR_COLOR="cyan"
 
 
@@ -195,3 +195,4 @@ SPACESHIP_PACKAGE_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
 SPACESHIP_PACKAGE_SYMBOL="📦 "
 SPACESHIP_PACKAGE_COLOR="red"
 
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
