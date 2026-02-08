@@ -14,7 +14,7 @@
 # Show/hide cloud & k8s segments in new sessions
 export SHOW_KUBE_CTX=true
 export SHOW_AWS_PROFILE=true
-export SHOW_GCP_PROJECT=true
+export SHOW_GCP_PROJECT=false
 
 # ─── Path & return code ──────────────────────────────────────────────────
 # Path: %2~ = last 2 dirs, %~ = full path, %1~ = last 1 dir
@@ -78,15 +78,19 @@ function aws-off() {
 }
 
 # ─── GCP Project ──────────────────────────────────────────────────────────
-# Displays when gcloud project is set; use gcp-on / gcp-off to toggle prompt
+# Only shows project name when one is set (gcloud config set project).
+# When no project is set, the GCP segment is hidden by default.
+# Use gcp-on / gcp-off to show/hide even when a project is set.
 export GCP_PROJECT_CACHE=""
 function update_gcp_project_cache() {
-  GCP_PROJECT_CACHE=$(gcloud config get-value project 2>/dev/null | tr -d '\n')
+  GCP_PROJECT_CACHE=$(gcloud config get-value project 2>/dev/null | tr -d '\n\r')
+  [[ "$GCP_PROJECT_CACHE" == "(unset)" || -z "$GCP_PROJECT_CACHE" ]] && GCP_PROJECT_CACHE=""
 }
-update_gcp_project_cache
 
 function gcp_project_prompt_info() {
-  if [[ "$SHOW_GCP_PROJECT" == true && -n "$GCP_PROJECT_CACHE" && "$GCP_PROJECT_CACHE" != "(unset)" ]]; then
+  update_gcp_project_cache
+  # Only display when a project is set and show is enabled
+  if [[ "$SHOW_GCP_PROJECT" == true && -n "$GCP_PROJECT_CACHE" ]]; then
     print -n " %{$fg[magenta]%}${_gcp_icon}%{${_gcp_color}%} $GCP_PROJECT_CACHE%{$reset_color%}"
   fi
 }
