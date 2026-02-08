@@ -40,13 +40,14 @@ local _prompt_char="»"
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ─── Kubernetes ──────────────────────────────────────────────────────────
+# Context is refreshed each prompt so "kubectl config use-context" updates immediately
 export KUBE_CTX_CACHE=""
 function update_kube_ctx_cache() {
-  KUBE_CTX_CACHE=$(kubectl config current-context 2>/dev/null)
+  KUBE_CTX_CACHE=$(kubectl config current-context 2>/dev/null | tr -d '\n\r')
 }
-update_kube_ctx_cache
 
 function kubectx_prompt_info() {
+  update_kube_ctx_cache
   if [[ "$SHOW_KUBE_CTX" == true && -n "$KUBE_CTX_CACHE" ]]; then
     print -n " %{$fg[blue]%}${_kube_icon}%{${_kube_color}%} $KUBE_CTX_CACHE%{$reset_color%}"
   fi
