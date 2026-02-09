@@ -16,6 +16,10 @@ export SHOW_KUBE_CTX=true
 export SHOW_AWS_PROFILE=true
 export SHOW_GCP_PROJECT=false
 
+# Cache TTL in seconds for kube/gcp (avoids running kubectl/gcloud every prompt)
+# Refresh when cache is older than this; set 0 to refresh every prompt
+export CLOUDPROMPT_CACHE_TTL=2
+
 # ─── Path & return code ──────────────────────────────────────────────────
 # Path: %2~ = last 2 dirs, %~ = full path, %1~ = last 1 dir
 local prompt_path="%2~"
@@ -40,14 +44,15 @@ local _prompt_char="»"
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ─── Kubernetes ──────────────────────────────────────────────────────────
-# Context is refreshed each prompt so "kubectl config use-context" updates immediately
+# Cached with TTL in precmd; prompt only reads cache (no kubectl per prompt)
 export KUBE_CTX_CACHE=""
+export KUBE_CTX_CACHE_TIME=0
 function update_kube_ctx_cache() {
   KUBE_CTX_CACHE=$(kubectl config current-context 2>/dev/null | tr -d '\n\r')
+  KUBE_CTX_CACHE_TIME=${EPOCHSECONDS:-$(date +%s)}
 }
 
 function kubectx_prompt_info() {
-  update_kube_ctx_cache
   if [[ "$SHOW_KUBE_CTX" == true && -n "$KUBE_CTX_CACHE" ]]; then
     print -n " %{$fg[blue]%}${_kube_icon}%{${_kube_color}%} $KUBE_CTX_CACHE%{$reset_color%}"
   fi
@@ -79,18 +84,16 @@ function aws-off() {
 }
 
 # ─── GCP Project ──────────────────────────────────────────────────────────
-# Only shows project name when one is set (gcloud config set project).
-# When no project is set, the GCP segment is hidden by default.
-# Use gcp-on / gcp-off to show/hide even when a project is set.
+# Only shows project name when one is set. Cached with TTL in precmd.
 export GCP_PROJECT_CACHE=""
+export GCP_PROJECT_CACHE_TIME=0
 function update_gcp_project_cache() {
   GCP_PROJECT_CACHE=$(gcloud config get-value project 2>/dev/null | tr -d '\n\r')
   [[ "$GCP_PROJECT_CACHE" == "(unset)" || -z "$GCP_PROJECT_CACHE" ]] && GCP_PROJECT_CACHE=""
+  GCP_PROJECT_CACHE_TIME=${EPOCHSECONDS:-$(date +%s)}
 }
 
 function gcp_project_prompt_info() {
-  update_gcp_project_cache
-  # Only display when a project is set and show is enabled
   if [[ "$SHOW_GCP_PROJECT" == true && -n "$GCP_PROJECT_CACHE" ]]; then
     print -n " %{$fg[magenta]%}${_gcp_icon}%{${_gcp_color}%} $GCP_PROJECT_CACHE%{$reset_color%}"
   fi
@@ -104,6 +107,20 @@ function gcp-off() {
   export SHOW_GCP_PROJECT=false
   echo "🚫 GCP project prompt disabled"
 }
+
+# ─── Cache refresh (runs once per prompt, respects TTL) ────────────────────
+# Runs in parent shell so cache persists; kubectl/gcloud at most every CLOUDPROMPT_CACHE_TTL sec
+function _cloudprompt_precmd() {
+  local now=${EPOCHSECONDS:-$(date +%s)}
+  local ttl=${CLOUDPROMPT_CACHE_TTL:-2}
+  if [[ "$SHOW_KUBE_CTX" == true ]] && (( ttl == 0 || now - ${KUBE_CTX_CACHE_TIME:-0} > ttl )); then
+    update_kube_ctx_cache
+  fi
+  if [[ "$SHOW_GCP_PROJECT" == true ]] && (( ttl == 0 || now - ${GCP_PROJECT_CACHE_TIME:-0} > ttl )); then
+    update_gcp_project_cache
+  fi
+}
+(( ${precmd_functions[(Ie)_cloudprompt_precmd]} )) || precmd_functions+=(_cloudprompt_precmd)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
