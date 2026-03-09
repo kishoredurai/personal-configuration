@@ -1,0 +1,74 @@
+# ---------------- Prompt Layout ----------------
+format = "$directory$kubernetes$aws$gcloud$git_branch$git_status$character"
+
+add_newline = true
+
+# ---------------- Directory (orange like %F{214}) ----------------
+[directory]
+style = "bold #ffaf00"
+truncation_length = 2
+format = "[$path ]($style)"
+
+# ---------------- Kubernetes ----------------
+[kubernetes]
+#symbol = "☸️ "
+symbol='⎈ ' 
+style = "#21c7ff"
+format = "[${symbol}](white bold)[$context ]($style)"
+disabled = false
+
+# ---------------- AWS ----------------
+[aws]
+symbol = '🅰 '
+style = "#ffaf00"
+#format = 'on [$symbol($profile )(\($region\) )(\[$duration\] )]($style)'
+format = "on [$symbol $profile ]($style)"
+disabled = false
+
+# ---------------- GCP ----------------
+[gcloud]
+symbol = "☁️ "
+style = "#ffaf00"
+format = "[$symbol$project ]($style)"
+disabled = true
+
+# ---------------- GIT ----------------
+
+[git_status]
+conflicted = "✘"
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+up_to_date = "✔"
+untracked = "?"
+modified = "*"
+staged = "+"
+renamed = "~"
+deleted = "✘"
+
+
+# ---------------- GO Lang ----------------
+[golang]
+format = 'via [🏎💨 $version](bold cyan) '
+
+# ---------------- Battery ----------------
+
+[battery]
+full_symbol = '🔋 '
+charging_symbol = '⚡️ '
+discharging_symbol = '💀 '
+
+[[battery.display]] 
+threshold = 10
+style = 'bold red'
+
+[[battery.display]]
+threshold = 30
+style = 'bold yellow'
+discharging_symbol = '💀 '
+
+
+# ---------------- Prompt Arrow ----------------
+[character]
+success_symbol = "[»](bold green)"
+error_symbol = "[»](bold red)"
